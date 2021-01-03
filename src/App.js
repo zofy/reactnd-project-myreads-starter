@@ -36,6 +36,25 @@ class BooksApp extends React.Component {
       });
   }
 
+  updateShelf = (book, shelf) => {
+    BooksAPI.update(book, shelf)
+      .then((newState) => {
+        BooksAPI.get(book.id)
+          .then((updatedBook) =>
+            this.setState((prevState) => {
+              prevState.books[book.id] = updatedBook;
+              return {
+                books: prevState.books,
+                categories: {
+                  currentlyReading: newState.currentlyReading,
+                  wantToRead: newState.wantToRead,
+                  read: newState.read,
+                },
+              }
+            }));
+      });
+  }
+
   render() {
     return (
       <div className="app">
