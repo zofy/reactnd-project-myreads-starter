@@ -18,7 +18,8 @@ class BooksApp extends React.Component {
     }
   }
 
-  initialSetup = (allBooks) => {
+  componentDidMount() {
+    const allBooks = await BooksAPI.getAll();
     var booksMap = {}
     allBooks.map((b) => booksMap[b.id] = b);
 
@@ -32,42 +33,32 @@ class BooksApp extends React.Component {
     }));
   }
 
-  componentDidMount() {
-    BooksAPI.getAll()
-      .then((allBooks) => {
-        this.initialSetup(allBooks);
-      });
-  }
-
   updateShelf = (book, shelf) => {
-    BooksAPI.update(book, shelf)
-      .then((newState) => {
-        BooksAPI.get(book.id)
-          .then((updatedBook) =>
-            this.setState((prevState) => {
-              prevState.books[book.id] = updatedBook;
-              return {
-                books: prevState.books,
-                categories: {
-                  currentlyReading: newState.currentlyReading,
-                  wantToRead: newState.wantToRead,
-                  read: newState.read,
-                },
-              }
-            }));
-      });
+    const newState = await BooksAPI.update(book, shelf);
+    const updatedBook = await BooksAPI.get(book.id);
+    this.setState((prevState) => {
+      prevState.books[book.id] = updatedBook;
+      return {
+        books: prevState.books,
+        categories: {
+          currentlyReading: newState.currentlyReading,
+          wantToRead: newState.wantToRead,
+          read: newState.read,
+        },
+      }
+    });
   }
 
   render() {
     const { books, categories } = this.state;
     return (
       <div className="app">
-        <Route exact path="/" render={() => (
-            <ListBookshelves books={books} shelves={categories}  onShelfUpdate={this.updateShelf}/>
-        )} />
-        <Route path="/search" render={() => (
+        <Route exact path="/">
+          <ListBookshelves books={books} shelves={categories}  onShelfUpdate={this.updateShelf}/>
+        </Route>
+        <Route path="/search">
           <SearchBooks shelves={categories} onShelfUpdate={this.updateShelf} />
-          )}/>
+        </Route>
       </div>
     )
   }
